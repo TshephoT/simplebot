@@ -28,29 +28,44 @@ const Order = mongoose.model("Order", {
 });
 
 // Webhook for Incoming WhatsApp Messages
-app.post("/whatsapp", async (req, res) => {
-  const message = req.body.Body.toLowerCase();
+app.post("/", async (req, res) => {
+  const message = req.body.Body?.toLowerCase();
   const sender = req.body.From;
+  console.log("📩 Incoming request body:", req.body);
+  console.log("📲 Sender:", sender);
 
-  if (message.includes("order")) {
-    await sendMessage(sender, "Please list the items you want to order.");
-  } else if (message.includes("location")) {
-    await sendMessage(sender, "Please share your location (send location on WhatsApp)." );
-  } else {
-    await sendMessage(sender, "Welcome to Kasi Delivery! Type 'order' to place an order.");
+  try {
+    if (message.includes("order")) {
+      await sendMessage(sender, "Please list the items you want to order.");
+    } else if (message.includes("location")) {
+      await sendMessage(sender, "Please share your delivery location.");
+    } else {
+      await sendMessage(sender, "Welcome to Kasi Delivery! Type 'order' to place an order.");
+    }
+    res.sendStatus(200);
+  } catch (err) {
+    console.error("❌ Error sending message:", err);
+    res.sendStatus(500);
   }
-
-  res.sendStatus(200);
 });
+
 
 // Send WhatsApp Message
 async function sendMessage(to, body) {
+  console.log("Sending message:");
+  console.log("From:", twilioNumber);
+  console.log("To:", to);
+
   await twilioClient.messages.create({
-    from: `whatsapp:${twilioNumber}`,
+    from: `whatsapp:${twilioNumber.replace("whatsapp:", "")}`,
     to,
     body,
   });
 }
+
+
+console.log("Sending message:");
+console.log("From:", twilioNumber);
 
 // Start Server
 const PORT = process.env.PORT || 3000;
